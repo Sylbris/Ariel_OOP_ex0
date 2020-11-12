@@ -1,8 +1,11 @@
 package ex1;
 
+import ex0.Graph_DS;
+import ex0.graph;
 import ex0.node_data;
 
 import java.io.*;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -36,7 +39,8 @@ public class WGraph_Algo implements weighted_graph_algorithms {
      */
     @Override
     public weighted_graph copy() {
-        return null;
+        weighted_graph copy_graph = new WGraph_DS(wg); // make the designated copied graph
+        return copy_graph;
     }
 
     /**
@@ -150,8 +154,43 @@ public class WGraph_Algo implements weighted_graph_algorithms {
      */
     @Override
     public List<node_info> shortestPath(int src, int dest) {
-        return null;
+        if(wg.getNode(src)==null || wg.getNode(dest)==null)//if either of them doesn't exist we return null.
+            return null;
+
+        shortestPathDist(src,dest);//lets mark the distance between all nodes and the src.
+
+        Queue<node_info> queue = new LinkedList<>(); // we define a queue to save all nodes.
+
+        List<node_info> path = new LinkedList<>();//a list to return the path.
+
+        path.add(wg.getNode(dest));//add the last to the list.
+
+        if(src==dest)
+            return path;
+
+        queue.add(wg.getNode(dest)); //add the last to the queue.
+
+        while (!queue.isEmpty()) { //commence bfs.
+
+            node_info curr = queue.poll();//pull the first from the queue.
+
+            for (node_info adjacent : wg.getV(curr.getKey())) {//iterate all of currs neibours.
+                if (adjacent.getTag() == (curr.getTag() - wg.getEdge(curr.getKey(),adjacent.getKey()))) { //only move if the distance is one less.
+
+                    path.add(adjacent);//add it to the list.
+                    queue.add(adjacent);//add the node to the queue.
+
+                    if (adjacent.getKey() == src) {// if we reached the source we stop.
+                        Collections.reverse(path);
+                        return path;
+                    }
+                    break; //we can stop iterating the neibours.
+                }
+            }
+        }
+        return path;
     }
+
 
     /**
      * Saves this weighted (undirected) graph to the given

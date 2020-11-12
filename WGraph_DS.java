@@ -1,5 +1,6 @@
 package ex1;
 
+import ex0.NodeData;
 import ex0.node_data;
 
 import java.io.Serializable;
@@ -18,7 +19,6 @@ public class WGraph_DS implements weighted_graph, Serializable {
         private HashMap<Integer,node_info> neighbours;// HashMap to store <Neighbour,Weight>;
         private HashMap<Integer, Double> edges;
 
-
         public NodeInfo(int key){//Constructor.
             this.key=key;
             this.info="blue";
@@ -26,6 +26,13 @@ public class WGraph_DS implements weighted_graph, Serializable {
             neighbours=new HashMap<>();
             edges=new HashMap<>();
         }
+    public NodeInfo(node_info n){ //copy constructor.
+        this.key=n.getKey();
+        this.tag=n.getTag();
+        this.info=n.getInfo();
+        this.neighbours=new HashMap<>();
+        this.edges=new HashMap<>();
+    }
         /**
          * Return the key (id) associated with this node.
          * Note: each node_data should have a unique key.
@@ -123,6 +130,24 @@ public class WGraph_DS implements weighted_graph, Serializable {
         node_map=new HashMap<>();
         this.edges=0;
         this.mode_count=0;
+    }
+    public WGraph_DS(weighted_graph wg){
+        this.node_map=new HashMap<>();//make a new hashmap.
+
+        for(node_info n:wg.getV()){ //add firstly the nodes themself.
+            node_info newnode=new NodeInfo(n);
+            node_map.put(n.getKey(),newnode);
+        }
+
+        for(node_info n:wg.getV()){
+            NodeInfo copy_n=(NodeInfo)n;
+            for(node_info neib:copy_n.getNi()){
+                connect(neib.getKey(), n.getKey(), getEdge(n.getKey(),neib.getKey()));//add neibours.
+            }
+        }
+
+        this.mode_count=wg.getMC();
+        this.edges=wg.edgeSize();
     }
     /**
      * return the node_data by the node_id,
