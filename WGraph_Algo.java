@@ -1,14 +1,7 @@
 package ex1;
 
-import ex0.Graph_DS;
-import ex0.graph;
-import ex0.node_data;
-
 import java.io.*;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
 public class WGraph_Algo implements weighted_graph_algorithms {
     private weighted_graph wg;
@@ -34,7 +27,7 @@ public class WGraph_Algo implements weighted_graph_algorithms {
 
     /**
      * Compute a deep copy of this weighted graph.
-     *
+     * Uses the WGraph_DS deep copy method in order to do so.
      * @return
      */
     @Override
@@ -46,6 +39,10 @@ public class WGraph_Algo implements weighted_graph_algorithms {
     /**
      * Returns true if and only if (iff) there is a valid path from EVREY node to each
      * other node. NOTE: assume ubdirectional graph.
+     *
+     * The algorithm goes over each node using BFS, marks it and then goes over its neighbours.
+     * by the end of the algorithm all nodes should have been visited if the graph is connected.
+     * Otherwise we return false as some nodes cannot be reached.
      *
      * @return
      */
@@ -92,6 +89,15 @@ public class WGraph_Algo implements weighted_graph_algorithms {
      * returns the length of the shortest path between src to dest
      * Note: if no such path --> returns -1
      *
+     * Here we use Dijkstra's algorithm to traverse the graph:
+     *
+     * https://www.youtube.com/watch?v=pVfj6mxhdMw&ab_channel=ComputerScience
+     * https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm#Using_a_priority_queue
+     *
+     * I used a priority queue to draw the node with the minimal distance each time(using comparator).
+     * Each time you reach a node you store the distance from the source node to that node if the new distance is smaller.
+     *
+     *
      * @param src  - start node
      * @param dest - end (target) node
      * @return
@@ -105,41 +111,48 @@ public class WGraph_Algo implements weighted_graph_algorithms {
         if (src == dest)// in case we get the same node.
             return 0;
 
+        wg.getNode(src).setTag(0);
+
+        PriorityQueue<node_info> queue = new PriorityQueue<>(11, new Comparator<node_info>() {//we define a comparator.
+            @Override
+            public int compare(node_info o1, node_info o2) {
+                if(o1.getTag()<o2.getTag())
+                    return -1;
+                if(o1.getTag()>o2.getTag())
+                    return 1;
+                else
+                    return 0;
+            }
+        });
+
         for (node_info n : wg.getV()) { // set the distance to max for all nodes from the source node.
+
+            if(n.getKey()!=src)
             n.setTag(Integer.MAX_VALUE);// this will be the distance from src node.
             n.setInfo("blue"); // lets mark all nodes as blue for unvisited.
         }
 
-        wg.getNode(src).setTag(0); // distance src node from itself is 0.
-
-        Queue<node_info> queue = new LinkedList<>(); // we define a queue to save all nodes.
-
         queue.add(wg.getNode(src));//we add the src node to the queue.
 
-        wg.getNode(src).setInfo("red");
+        while (!queue.isEmpty()) {
 
-        while (!queue.isEmpty()) { //bfs
+            node_info curr = queue.remove();//pull the first from the queue.
 
-            node_info curr = queue.poll();//pull the first from the queue.
+            curr.setInfo("red");
 
             for (node_info adjacent : wg.getV(curr.getKey())) {//iterate all of currs neibours.
                 if (adjacent.getInfo() == "blue") { // lets check all unvisited children
 
-                    if(adjacent.getTag()>(curr.getTag() + wg.getEdge(adjacent.getKey(), curr.getKey())))//if new distance is smaller, update the it.
-                    adjacent.setTag(curr.getTag() + wg.getEdge(adjacent.getKey(), curr.getKey()));//set the tag of the node to be the previous Weight + new Weight.
+                    if(adjacent.getTag()>(curr.getTag() + wg.getEdge(adjacent.getKey(), curr.getKey()))) {//if new distance is smaller, update the it.
+                        adjacent.setTag(curr.getTag() + wg.getEdge(adjacent.getKey(), curr.getKey()));//set the tag of the node to be the previous Weight + new Weight.
+                        queue.add(adjacent);
+                    }
 
-                    adjacent.setInfo("red");//set node color to red.
-
-                    if (adjacent.getKey() == dest) // if were there return the distance.
-
-                        return adjacent.getTag();
-                    else
-                        queue.add(adjacent); // if not add it to the que and go next.
 
                 }
             }
         }
-        return -1; //if we haven't found it return -1.
+        return wg.getNode(dest).getTag(); //if we haven't found it return -1.
     }
 
     /**
@@ -147,6 +160,10 @@ public class WGraph_Algo implements weighted_graph_algorithms {
      * src--> n1-->n2-->...dest
      * see: https://en.wikipedia.org/wiki/Shortest_path_problem
      * Note if no such path --> returns null;
+     *
+     * Here we use our previous algorithm shortestPathDist to calculate the distance to each node.
+     * once done, all we left is to backtrack our way by choosing a neighbour that has a distance equal to our current node's - the weight of the edge between them.
+     *
      *
      * @param src  - start node
      * @param dest - end (target) node
@@ -175,7 +192,14 @@ public class WGraph_Algo implements weighted_graph_algorithms {
             node_info curr = queue.poll();//pull the first from the queue.
 
             for (node_info adjacent : wg.getV(curr.getKey())) {//iterate all of currs neibours.
-                if (adjacent.getTag() == (curr.getTag() - wg.getEdge(curr.getKey(),adjacent.getKey()))) { //only move if the distance is one less.
+
+              /*  System.out.println("adjacent neib distance: " + adjacent.getTag());
+                System.out.println("curr.getTag() is : " + curr.getTag());
+                System.out.println("edge between them : "+ wg.getEdge(curr.getKey(),adjacent.getKey()));
+                System.out.println("the diff is : " + (curr.getTag() - wg.getEdge(curr.getKey(),adjacent.getKey())));
+                System.out.println("");
+*/
+                if (curr.getTag() == adjacent.getTag() + wg.getEdge(curr.getKey(),adjacent.getKey())) { //only move if the distance is one less.
 
                     path.add(adjacent);//add it to the list.
                     queue.add(adjacent);//add the node to the queue.
@@ -184,7 +208,7 @@ public class WGraph_Algo implements weighted_graph_algorithms {
                         Collections.reverse(path);
                         return path;
                     }
-                    break; //we can stop iterating the neibours.
+                    break; //we can stop iterating the neighbours.
                 }
             }
         }
