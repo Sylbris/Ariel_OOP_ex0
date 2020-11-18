@@ -193,12 +193,6 @@ public class WGraph_Algo implements weighted_graph_algorithms {
 
             for (node_info adjacent : wg.getV(curr.getKey())) {//iterate all of currs neibours.
 
-              /*  System.out.println("adjacent neib distance: " + adjacent.getTag());
-                System.out.println("curr.getTag() is : " + curr.getTag());
-                System.out.println("edge between them : "+ wg.getEdge(curr.getKey(),adjacent.getKey()));
-                System.out.println("the diff is : " + (curr.getTag() - wg.getEdge(curr.getKey(),adjacent.getKey())));
-                System.out.println("");
-*/
                 if (curr.getTag() == adjacent.getTag() + wg.getEdge(curr.getKey(),adjacent.getKey())) { //only move if the distance is one less.
 
                     path.add(adjacent);//add it to the list.
